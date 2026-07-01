@@ -1405,7 +1405,15 @@ function toggleFoodDropdown() {
 }
 
 function openFoodDropdown() {
+  if (state.foods.length === 0) {
+    showToast(
+      "Nejprve přidejte potravinu ve správě potravin."
+    );
+    return;
+  }
+
   elements.foodDropdown.hidden = false;
+
   elements.foodSelectButton.setAttribute(
     "aria-expanded",
     "true"
@@ -1413,6 +1421,11 @@ function openFoodDropdown() {
 
   elements.foodSearchInput.value = "";
   renderFoodOptions();
+
+  elements.foodSelectButton.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 
   requestAnimationFrame(() => {
     elements.foodSearchInput.focus();
