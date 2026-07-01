@@ -2,208 +2,404 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
   <title>Makro kalkulačka</title>
-  <meta name="description" content="Jednoduchá kalkulačka jídelníčků a makroživin.">
+
+  <meta
+    name="description"
+    content="Jednoduchá kalkulačka jídelníčků a makroživin."
+  >
+
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-  <section id="loginScreen" class="login-screen">
-  <form id="loginForm" class="card login-card">
-    <p class="eyebrow">Makro kalkulačka</p>
-    <h1>Přihlášení</h1>
-
-    <div class="field">
-      <label for="loginEmail">E-mail</label>
-      <input
-        id="loginEmail"
-        type="email"
-        autocomplete="email"
-        required
-      >
-    </div>
-
-    <div class="field">
-      <label for="loginPassword">Heslo</label>
-      <input
-        id="loginPassword"
-        type="password"
-        autocomplete="current-password"
-        required
-      >
-    </div>
-
-    <button id="loginButton" class="button primary" type="submit">
-      Přihlásit se
-    </button>
-
-    <p id="loginError" class="login-error"></p>
-  </form>
-</section>
-
-<div id="application" hidden>
-  <header class="topbar">
-  <div>
-    <p class="eyebrow">Nutriční přehled</p>
-    <h1>Makro kalkulačka</h1>
-  </div>
-
-  <div class="topbar-actions">
-    <button
-      id="logoutButton"
-      class="button secondary"
-      type="button"
+  <section
+    id="loginScreen"
+    class="login-screen"
+  >
+    <form
+      id="loginForm"
+      class="card login-card"
     >
-      Odhlásit se
-    </button>
-  </div>
-</header>
+      <p class="eyebrow">Makro kalkulačka</p>
+      <h1>Přihlášení</h1>
 
-  <main class="app-layout">
-    <aside class="sidebar card">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Evidence</p>
-          <h2>Klienti</h2>
-        </div>
-        <button id="addClientButton" class="icon-button" type="button" aria-label="Přidat klienta">+</button>
+      <div class="field">
+        <label for="loginEmail">E-mail</label>
+
+        <input
+          id="loginEmail"
+          type="email"
+          autocomplete="email"
+          required
+        >
       </div>
 
-      <div id="clientList" class="client-list"></div>
-      <p id="emptyClients" class="empty-state">Zatím nemáte žádného klienta.</p>
-    </aside>
+      <div class="field">
+        <label for="loginPassword">Heslo</label>
 
-    <section class="workspace">
-      <div id="clientWorkspace" hidden>
-        <section class="card client-header">
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <button
+        id="loginButton"
+        class="button primary"
+        type="submit"
+      >
+        Přihlásit se
+      </button>
+
+      <p
+        id="loginError"
+        class="login-error"
+      ></p>
+    </form>
+  </section>
+
+  <div
+    id="application"
+    hidden
+  >
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Nutriční přehled</p>
+        <h1>Makro kalkulačka</h1>
+      </div>
+
+      <div class="topbar-actions">
+        <a
+          href="foods.html"
+          class="button secondary"
+        >
+          Spravovat potraviny
+        </a>
+
+        <button
+          id="logoutButton"
+          class="button secondary"
+          type="button"
+        >
+          Odhlásit se
+        </button>
+      </div>
+    </header>
+
+    <main class="app-layout">
+      <aside class="sidebar card">
+        <div class="section-heading">
           <div>
-            <p class="eyebrow">Aktivní klient</p>
-            <input id="clientNameInput" class="title-input" type="text" aria-label="Jméno klienta">
+            <p class="eyebrow">Evidence</p>
+            <h2>Klienti</h2>
           </div>
-          <button id="deleteClientButton" class="button danger" type="button">Smazat klienta</button>
-        </section>
 
-        <nav id="mealPlanTabs" class="tabs" aria-label="Jídelníčky klienta"></nav>
+          <button
+            id="addClientButton"
+            class="icon-button"
+            type="button"
+            aria-label="Přidat klienta"
+          >
+            +
+          </button>
+        </div>
 
-        <section class="card">
-          <div class="section-heading wrap">
+        <div
+          id="clientList"
+          class="client-list"
+        ></div>
+
+        <p
+          id="emptyClients"
+          class="empty-state"
+        >
+          Zatím nemáte žádného klienta.
+        </p>
+      </aside>
+
+      <section class="workspace">
+        <div
+          id="clientWorkspace"
+          hidden
+        >
+          <section class="card client-header">
             <div>
-              <p class="eyebrow">Jídelníček</p>
-              <input id="mealPlanNameInput" class="subtitle-input" type="text" aria-label="Název jídelníčku">
-            </div>
-            <div class="inline-actions">
-              <button id="addMealPlanButton" class="button secondary" type="button">Nový jídelníček</button>
-              <button id="deleteMealPlanButton" class="button danger ghost" type="button">Smazat jídelníček</button>
-            </div>
-          </div>
+              <p class="eyebrow">Aktivní klient</p>
 
-          <form id="foodForm" class="food-form">
-            <div class="field wide">
-              <label for="foodSelect">Potravina / jídlo</label>
-              <div class="select-wrapper">
-                <select id="foodSelect" required>
-                  <option value="">Vyberte potravinu</option>
-                </select>
+              <input
+                id="clientNameInput"
+                class="title-input"
+                type="text"
+                aria-label="Jméno klienta"
+              >
+            </div>
+
+            <button
+              id="deleteClientButton"
+              class="button danger"
+              type="button"
+            >
+              Smazat klienta
+            </button>
+          </section>
+
+          <nav
+            id="mealPlanTabs"
+            class="tabs"
+            aria-label="Jídelníčky klienta"
+          ></nav>
+
+          <section class="card">
+            <div class="section-heading wrap">
+              <div>
+                <p class="eyebrow">Jídelníček</p>
+
+                <input
+                  id="mealPlanNameInput"
+                  class="subtitle-input"
+                  type="text"
+                  aria-label="Název jídelníčku"
+                >
+              </div>
+
+              <div class="inline-actions">
+                <button
+                  id="addMealPlanButton"
+                  class="button secondary"
+                  type="button"
+                >
+                  Nový jídelníček
+                </button>
+
+                <button
+                  id="deleteMealPlanButton"
+                  class="button danger ghost"
+                  type="button"
+                >
+                  Smazat jídelníček
+                </button>
               </div>
             </div>
-            <div class="field">
-              <label for="foodAmount">Množství (g)</label>
-              <input id="foodAmount" type="number" min="0.1" step="0.1" value="100" required>
-            </div>
-            <div class="field">
-              <label for="foodProtein">Bílkoviny pro množství</label>
-              <input id="foodProtein" type="number" readonly>
-            </div>
-            <div class="field">
-              <label for="foodFat">Tuky pro množství</label>
-              <input id="foodFat" type="number" readonly>
-            </div>
-            <div class="field">
-              <label for="foodCarbs">Sacharidy pro množství</label>
-              <input id="foodCarbs" type="number" readonly>
-            </div>
-            <button class="button primary add-food-button" type="submit">Přidat položku</button>
 
-            <div id="foodPreview" class="food-preview" hidden>
-              <span>Pro zadané množství:</span>
-              <strong id="previewProtein">B 0 g</strong>
-              <strong id="previewFat">T 0 g</strong>
-              <strong id="previewCarbs">S 0 g</strong>
-              <strong id="previewCalories">0 kcal</strong>
+            <form
+              id="foodForm"
+              class="food-form"
+            >
+              <div class="field wide">
+                <label for="foodSelect">
+                  Potravina / jídlo
+                </label>
+
+                <div class="food-combobox">
+                <button
+                  id="foodSelectButton"
+                  class="food-select-button"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                >
+                  <span id="foodSelectLabel">Vyberte potravinu</span>
+                  <span class="food-select-arrow" aria-hidden="true"></span>
+                </button>
+
+                <div
+                  id="foodDropdown"
+                  class="food-dropdown"
+                  hidden
+                >
+                  <input
+                    id="foodSearchInput"
+                    class="food-search-input"
+                    type="search"
+                    placeholder="Hledat potravinu…"
+                    autocomplete="off"
+                  >
+
+                  <div
+                    id="foodOptions"
+                    class="food-options"
+                    role="listbox"
+                  ></div>
+                </div>
+
+                <input
+                  id="foodSelect"
+                  type="hidden"
+                  required
+                >
+              </div>
+              </div>
+
+              <div class="field">
+                <label for="foodAmount">
+                  Množství (g)
+                </label>
+
+                <input
+                  id="foodAmount"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value="100"
+                  required
+                >
+              </div>
+
+              <button
+                class="button primary add-food-button"
+                type="submit"
+              >
+                Přidat položku
+              </button>
+
+              <div
+                id="foodPreview"
+                class="food-preview"
+                hidden
+              >
+                <span>Pro zadané množství:</span>
+                <strong id="previewProtein">B 0 g</strong>
+                <strong id="previewFat">T 0 g</strong>
+                <strong id="previewCarbs">S 0 g</strong>
+                <strong id="previewCalories">0 kcal</strong>
+              </div>
+            </form>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Potravina</th>
+                    <th>Množství</th>
+                    <th>Bílkoviny</th>
+                    <th>Tuky</th>
+                    <th>Sacharidy</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody id="foodTableBody"></tbody>
+              </table>
+
+              <p
+                id="emptyFoods"
+                class="empty-state"
+              >
+                Do jídelníčku zatím nebyla přidána žádná položka.
+              </p>
             </div>
-          </form>
+          </section>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Potravina</th>
-                  <th>Množství</th>
-                  <th>Bílkoviny</th>
-                  <th>Tuky</th>
-                  <th>Sacharidy</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="foodTableBody"></tbody>
-            </table>
-            <p id="emptyFoods" class="empty-state">Do jídelníčku zatím nebyla přidána žádná položka.</p>
-          </div>
-        </section>
+          <section class="summary-grid">
+            <article class="summary-card">
+              <span>Bílkoviny</span>
+              <strong id="totalProtein">0 g</strong>
+            </article>
 
-        <section class="summary-grid">
-          <article class="summary-card">
-            <span>Bílkoviny</span>
-            <strong id="totalProtein">0 g</strong>
-          </article>
-          <article class="summary-card">
-            <span>Tuky</span>
-            <strong id="totalFat">0 g</strong>
-          </article>
-          <article class="summary-card">
-            <span>Sacharidy</span>
-            <strong id="totalCarbs">0 g</strong>
-          </article>
-          <article class="summary-card">
-            <span>Orientační energie</span>
-            <strong id="totalCalories">0 kcal</strong>
-          </article>
-        </section>
+            <article class="summary-card">
+              <span>Tuky</span>
+              <strong id="totalFat">0 g</strong>
+            </article>
 
-        <section class="card message-card">
-          <div class="section-heading wrap">
-            <div>
-              <p class="eyebrow">Výstup pro klienta</p>
-              <h2>Vygenerovaná zpráva</h2>
+            <article class="summary-card">
+              <span>Sacharidy</span>
+              <strong id="totalCarbs">0 g</strong>
+            </article>
+
+            <article class="summary-card">
+              <span>Orientační energie</span>
+              <strong id="totalCalories">0 kcal</strong>
+            </article>
+          </section>
+
+          <section class="card message-card">
+            <div class="section-heading wrap">
+              <div>
+                <p class="eyebrow">Výstup pro klienta</p>
+                <h2>Vygenerovaná zpráva</h2>
+              </div>
+
+              <button
+                id="copyMessageButton"
+                class="button secondary"
+                type="button"
+              >
+                Kopírovat zprávu
+              </button>
             </div>
-            <button id="copyMessageButton" class="button secondary" type="button">Kopírovat zprávu</button>
-          </div>
-          <textarea id="messageOutput" rows="12" aria-label="Zpráva pro klienta"></textarea>
-          <p class="hint">Text můžete upravit před zkopírováním.</p>
-        </section>
-      </div>
-    </section>
-  </main>
 
-  <dialog id="clientDialog">
-    <form id="clientForm" method="dialog" class="dialog-form">
-      <div>
-        <p class="eyebrow">Nový profil</p>
-        <h2>Přidat klienta</h2>
-      </div>
-      <div class="field">
-        <label for="newClientName">Jméno klienta</label>
-        <input id="newClientName" type="text" placeholder="Např. Jana Nováková" required>
-      </div>
-      <div class="dialog-actions">
-        <button id="cancelClientButton" class="button secondary" type="button">Zrušit</button>
-        <button class="button primary" type="submit">Přidat</button>
-      </div>
-    </form>
-  </dialog>
+            <textarea
+              id="messageOutput"
+              rows="12"
+              aria-label="Zpráva pro klienta"
+            ></textarea>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+            <p class="hint">
+              Text můžete upravit před zkopírováním.
+            </p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="clientDialog">
+      <form
+        id="clientForm"
+        class="dialog-form"
+      >
+        <div>
+          <p class="eyebrow">Nový profil</p>
+          <h2>Přidat klienta</h2>
+        </div>
+
+        <div class="field">
+          <label for="newClientName">
+            Jméno klienta
+          </label>
+
+          <input
+            id="newClientName"
+            type="text"
+            placeholder="Např. Jana Nováková"
+            required
+          >
+        </div>
+
+        <div class="dialog-actions">
+          <button
+            id="cancelClientButton"
+            class="button secondary"
+            type="button"
+          >
+            Zrušit
+          </button>
+
+          <button
+            class="button primary"
+            type="submit"
+          >
+            Přidat
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div
+      id="toast"
+      class="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
