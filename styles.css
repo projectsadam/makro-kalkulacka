@@ -88,16 +88,6 @@ h2 { margin-bottom: 0; font-size: 1.2rem; }
 #clientWorkspace { display: grid; gap: 18px; }
 #clientWorkspace[hidden] { display: none; }
 
-.welcome-card {
-  min-height: 300px;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  text-align: center;
-  padding: 40px;
-}
-.welcome-card p { max-width: 560px; color: var(--muted); }
-
 .client-header, .message-card, section.card:not(.sidebar) { padding: 24px; }
 
 .client-header {
@@ -393,4 +383,36 @@ dialog::backdrop { background: rgba(22, 30, 36, .46); }
 
 .field input[readonly][type="number"] {
   -moz-appearance: textfield;
+}
+
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--background);
+}
+
+.login-screen[hidden],
+#application[hidden] {
+  display: none;
+}
+
+.login-card {
+  width: min(430px, 100%);
+  padding: 32px;
+  display: grid;
+  gap: 20px;
+}
+
+.login-error {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }

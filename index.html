@@ -8,19 +8,56 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <section id="loginScreen" class="login-screen">
+  <form id="loginForm" class="card login-card">
+    <p class="eyebrow">Makro kalkulačka</p>
+    <h1>Přihlášení</h1>
+
+    <div class="field">
+      <label for="loginEmail">E-mail</label>
+      <input
+        id="loginEmail"
+        type="email"
+        autocomplete="email"
+        required
+      >
+    </div>
+
+    <div class="field">
+      <label for="loginPassword">Heslo</label>
+      <input
+        id="loginPassword"
+        type="password"
+        autocomplete="current-password"
+        required
+      >
+    </div>
+
+    <button id="loginButton" class="button primary" type="submit">
+      Přihlásit se
+    </button>
+
+    <p id="loginError" class="login-error"></p>
+  </form>
+</section>
+
+<div id="application" hidden>
   <header class="topbar">
-    <div>
-      <p class="eyebrow">Nutriční přehled</p>
-      <h1>Makro kalkulačka</h1>
-    </div>
-    <div class="topbar-actions">
-      <button id="exportButton" class="button secondary" type="button">Exportovat data</button>
-      <label class="button secondary file-button">
-        Importovat data
-        <input id="importInput" type="file" accept="application/json">
-      </label>
-    </div>
-  </header>
+  <div>
+    <p class="eyebrow">Nutriční přehled</p>
+    <h1>Makro kalkulačka</h1>
+  </div>
+
+  <div class="topbar-actions">
+    <button
+      id="logoutButton"
+      class="button secondary"
+      type="button"
+    >
+      Odhlásit se
+    </button>
+  </div>
+</header>
 
   <main class="app-layout">
     <aside class="sidebar card">
@@ -166,7 +203,8 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
 </html>

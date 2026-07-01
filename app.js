@@ -1,4 +1,11 @@
-const STORAGE_KEY = "makro-kalkulacka-v1";
+const SUPABASE_URL = "https://jshxmdjnknepzzkbyqpx.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_FjFVlSwMWn3_jnkFfGXmrg_Gh0WUNOt";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
 
 const FOOD_CATALOG = [
   { id: "chicken-breast", name: "Kuřecí prsa", proteinPer100: 23.1, fatPer100: 1.9, carbsPer100: 0 },
@@ -21,7 +28,12 @@ const FOOD_CATALOG = [
   { id: "olive-oil", name: "Olivový olej", proteinPer100: 0, fatPer100: 100, carbsPer100: 0 },
 ];
 
-const state = loadState();
+const state = {
+  user: null,
+  clients: [],
+  activeClientId: null,
+  activeMealPlanId: null,
+};
 
 const elements = {
   clientList: document.querySelector("#clientList"),
@@ -47,8 +59,15 @@ const elements = {
   totalCarbs: document.querySelector("#totalCarbs"),
   totalCalories: document.querySelector("#totalCalories"),
   messageOutput: document.querySelector("#messageOutput"),
-  importInput: document.querySelector("#importInput"),
   toast: document.querySelector("#toast"),
+  loginScreen: document.querySelector("#loginScreen"),
+loginForm: document.querySelector("#loginForm"),
+loginEmail: document.querySelector("#loginEmail"),
+loginPassword: document.querySelector("#loginPassword"),
+loginButton: document.querySelector("#loginButton"),
+loginError: document.querySelector("#loginError"),
+application: document.querySelector("#application"),
+logoutButton: document.querySelector("#logoutButton"),
 };
 
 document.querySelector("#addClientButton").addEventListener("click", openClientDialog);
@@ -57,39 +76,21 @@ document.querySelector("#deleteClientButton").addEventListener("click", deleteAc
 document.querySelector("#addMealPlanButton").addEventListener("click", addMealPlan);
 document.querySelector("#deleteMealPlanButton").addEventListener("click", deleteActiveMealPlan);
 document.querySelector("#copyMessageButton").addEventListener("click", copyMessage);
-document.querySelector("#exportButton").addEventListener("click", exportData);
-elements.importInput.addEventListener("change", importData);
 elements.clientForm.addEventListener("submit", addClient);
 elements.foodForm.addEventListener("submit", addFood);
 elements.foodSelect.addEventListener("change", updateSelectedFood);
 document.querySelector("#foodAmount").addEventListener("input", updateFoodPreview);
-elements.clientNameInput.addEventListener("input", updateClientName);
-elements.mealPlanNameInput.addEventListener("input", updateMealPlanName);
+elements.clientNameInput.addEventListener(
+  "change",
+  updateClientName
+);
+elements.mealPlanNameInput.addEventListener(
+  "change",
+  updateMealPlanName
+);
+elements.loginForm.addEventListener("submit", login);
+elements.logoutButton.addEventListener("click", logout);
 
-function createId() {
-  return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
-}
-
-function defaultState() {
-  return {
-    clients: [],
-    activeClientId: null,
-    activeMealPlanId: null,
-  };
-}
-
-function loadState() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return stored && Array.isArray(stored.clients) ? stored : defaultState();
-  } catch {
-    return defaultState();
-  }
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
 
 function activeClient() {
   return state.clients.find(client => client.id === state.activeClientId) ?? null;
@@ -106,104 +107,202 @@ function openClientDialog() {
   setTimeout(() => elements.newClientName.focus(), 0);
 }
 
-function addClient(event) {
-  event.preventDefault();
-  const name = elements.newClientName.value.trim();
-  if (!name) return;
 
-  const planId = createId();
-  const client = {
-    id: createId(),
-    name,
-    mealPlans: [{
-      id: planId,
-      name: "Jídelníček 1",
-      foods: [],
-      customMessage: "",
-    }],
-  };
-
-  state.clients.push(client);
-  state.activeClientId = client.id;
-  state.activeMealPlanId = planId;
-  saveState();
-  elements.clientDialog.close();
-  render();
-}
-
-function deleteActiveClient() {
+async function deleteActiveClient() {
   const client = activeClient();
-  if (!client || !confirm(`Opravdu chcete smazat klienta „${client.name}“?`)) return;
 
-  state.clients = state.clients.filter(item => item.id !== client.id);
+  if (
+    !client ||
+    !confirm(
+      `Opravdu chcete smazat klienta „${client.name}“?`
+    )
+  ) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("clients")
+    .delete()
+    .eq("id", client.id)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+    showToast("Klienta se nepodařilo smazat.");
+    return;
+  }
+
+  state.clients = state.clients.filter(
+    item => item.id !== client.id
+  );
+
   const nextClient = state.clients[0] ?? null;
+
   state.activeClientId = nextClient?.id ?? null;
-  state.activeMealPlanId = nextClient?.mealPlans[0]?.id ?? null;
-  saveState();
+  state.activeMealPlanId =
+    nextClient?.mealPlans[0]?.id ?? null;
+
   render();
 }
 
 function selectClient(clientId) {
-  const client = state.clients.find(item => item.id === clientId);
+  const client = state.clients.find(
+    item => item.id === clientId
+  );
+
   state.activeClientId = clientId;
-  state.activeMealPlanId = client?.mealPlans[0]?.id ?? null;
-  saveState();
-  render();
-}
+  state.activeMealPlanId =
+    client?.mealPlans[0]?.id ?? null;
 
-function addMealPlan() {
-  const client = activeClient();
-  if (!client) return;
-
-  const plan = {
-    id: createId(),
-    name: `Jídelníček ${client.mealPlans.length + 1}`,
-    foods: [],
-    customMessage: "",
-  };
-  client.mealPlans.push(plan);
-  state.activeMealPlanId = plan.id;
-  saveState();
-  render();
-}
-
-function deleteActiveMealPlan() {
-  const client = activeClient();
-  const plan = activeMealPlan();
-  if (!client || !plan) return;
-
-  if (client.mealPlans.length === 1) {
-    showToast("Klient musí mít alespoň jeden jídelníček.");
-    return;
-  }
-  if (!confirm(`Opravdu chcete smazat „${plan.name}“?`)) return;
-
-  client.mealPlans = client.mealPlans.filter(item => item.id !== plan.id);
-  state.activeMealPlanId = client.mealPlans[0].id;
-  saveState();
   render();
 }
 
 function selectMealPlan(planId) {
   state.activeMealPlanId = planId;
-  saveState();
   render();
 }
 
-function updateClientName(event) {
+async function addMealPlan() {
   const client = activeClient();
-  if (!client) return;
-  client.name = event.target.value;
-  saveState();
+
+  if (!client || !state.user) {
+    return;
+  }
+
+  const name =
+    `Jídelníček ${client.mealPlans.length + 1}`;
+
+  const { data: plan, error } =
+    await supabaseClient
+      .from("meal_plans")
+      .insert({
+        user_id: state.user.id,
+        client_id: client.id,
+        name,
+      })
+      .select("id, name")
+      .single();
+
+  if (error) {
+    console.error(error);
+    showToast("Jídelníček se nepodařilo přidat.");
+    return;
+  }
+
+  client.mealPlans.push({
+    id: plan.id,
+    name: plan.name,
+    foods: [],
+    customMessage: "",
+  });
+
+  state.activeMealPlanId = plan.id;
+  render();
+}
+
+async function deleteActiveMealPlan() {
+  const client = activeClient();
+  const plan = activeMealPlan();
+
+  if (!client || !plan) {
+    return;
+  }
+
+  if (client.mealPlans.length === 1) {
+    showToast(
+      "Klient musí mít alespoň jeden jídelníček."
+    );
+    return;
+  }
+
+  if (!confirm(`Opravdu chcete smazat „${plan.name}“?`)) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("meal_plans")
+    .delete()
+    .eq("id", plan.id)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+    showToast("Jídelníček se nepodařilo smazat.");
+    return;
+  }
+
+  client.mealPlans = client.mealPlans.filter(
+    item => item.id !== plan.id
+  );
+
+  state.activeMealPlanId =
+    client.mealPlans[0].id;
+
+  render();
+}
+
+async function updateClientName(event) {
+  const client = activeClient();
+  const name = event.target.value.trim();
+
+  if (!client || !name) {
+    if (client) {
+      event.target.value = client.name;
+    }
+
+    return;
+  }
+
+  const oldName = client.name;
+
+  const { error } = await supabaseClient
+    .from("clients")
+    .update({ name })
+    .eq("id", client.id)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+    event.target.value = oldName;
+    showToast("Jméno se nepodařilo uložit.");
+    return;
+  }
+
+  client.name = name;
   renderClientList();
   renderMessage(false);
 }
 
-function updateMealPlanName(event) {
+async function updateMealPlanName(event) {
   const plan = activeMealPlan();
-  if (!plan) return;
-  plan.name = event.target.value;
-  saveState();
+  const name = event.target.value.trim();
+
+  if (!plan || !name) {
+    if (plan) {
+      event.target.value = plan.name;
+    }
+
+    return;
+  }
+
+  const oldName = plan.name;
+
+  const { error } = await supabaseClient
+    .from("meal_plans")
+    .update({ name })
+    .eq("id", plan.id)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+    event.target.value = oldName;
+    showToast(
+      "Název jídelníčku se nepodařilo uložit."
+    );
+    return;
+  }
+
+  plan.name = name;
   renderMealPlanTabs();
   renderMessage(false);
 }
@@ -278,40 +377,110 @@ function roundForInput(value) {
   return Math.round((value + Number.EPSILON) * 10) / 10;
 }
 
-function addFood(event) {
+async function addFood(event) {
   event.preventDefault();
+
   const plan = activeMealPlan();
   const catalogFood = selectedCatalogFood();
-  if (!plan || !catalogFood) return;
+  const amount = numberValue("#foodAmount");
 
-  const food = {
-    id: createId(),
-    catalogFoodId: catalogFood.id,
-    name: catalogFood.name,
-    amount: numberValue("#foodAmount"),
-    proteinPer100: catalogFood.proteinPer100,
-    fatPer100: catalogFood.fatPer100,
-    carbsPer100: catalogFood.carbsPer100,
-  };
+  if (
+    !plan ||
+    !catalogFood ||
+    amount <= 0 ||
+    !state.user
+  ) {
+    return;
+  }
 
-  if (food.amount <= 0) return;
-  plan.foods.push(food);
-  saveState();
+  const { data: item, error } =
+    await supabaseClient
+      .from("meal_plan_items")
+      .insert({
+        user_id: state.user.id,
+        meal_plan_id: plan.id,
+
+        food_id: catalogFood.id,
+        food_name: catalogFood.name,
+
+        amount,
+
+        protein_per_100:
+          catalogFood.proteinPer100,
+
+        fat_per_100:
+          catalogFood.fatPer100,
+
+        carbs_per_100:
+          catalogFood.carbsPer100,
+      })
+      .select(`
+        id,
+        food_id,
+        food_name,
+        amount,
+        protein_per_100,
+        fat_per_100,
+        carbs_per_100
+      `)
+      .single();
+
+  if (error) {
+    console.error(error);
+    showToast("Položku se nepodařilo uložit.");
+    return;
+  }
+
+  plan.foods.push({
+    id: item.id,
+    catalogFoodId: item.food_id,
+    name: item.food_name,
+    amount: Number(item.amount),
+
+    proteinPer100:
+      Number(item.protein_per_100),
+
+    fatPer100:
+      Number(item.fat_per_100),
+
+    carbsPer100:
+      Number(item.carbs_per_100),
+  });
 
   elements.foodForm.reset();
   document.querySelector("#foodAmount").value = "100";
+
   updateSelectedFood();
   elements.foodSelect.focus();
   renderPlan();
 }
 
-function deleteFood(foodId) {
+async function deleteFood(foodId) {
   const plan = activeMealPlan();
-  if (!plan) return;
-  plan.foods = plan.foods.filter(food => food.id !== foodId);
-  saveState();
+
+  if (!plan) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("meal_plan_items")
+    .delete()
+    .eq("id", foodId)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+    showToast("Položku se nepodařilo smazat.");
+    return;
+  }
+
+  plan.foods = plan.foods.filter(
+    food => food.id !== foodId
+  );
+
   renderPlan();
 }
+
 
 function numberValue(selector) {
   return Number.parseFloat(document.querySelector(selector).value) || 0;
@@ -470,40 +639,7 @@ async function copyMessage() {
   }
 }
 
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `makro-kalkulacka-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
 
-function importData(event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const imported = JSON.parse(reader.result);
-      if (!imported || !Array.isArray(imported.clients)) throw new Error();
-
-      state.clients = imported.clients;
-      state.activeClientId = imported.activeClientId ?? imported.clients[0]?.id ?? null;
-      const client = activeClient();
-      state.activeMealPlanId = imported.activeMealPlanId ?? client?.mealPlans[0]?.id ?? null;
-      saveState();
-      render();
-      showToast("Data byla úspěšně importována.");
-    } catch {
-      showToast("Soubor nemá správný formát.");
-    } finally {
-      elements.importInput.value = "";
-    }
-  };
-  reader.readAsText(file);
-}
 
 function escapeHtml(value) {
   return String(value)
@@ -522,5 +658,233 @@ function showToast(message) {
   toastTimer = setTimeout(() => elements.toast.classList.remove("visible"), 2200);
 }
 
-populateFoodCatalog();
-render();
+initializeApplication();
+
+async function initializeApplication() {
+  populateFoodCatalog();
+
+  const {
+    data: { session },
+    error,
+  } = await supabaseClient.auth.getSession();
+
+  if (error || !session?.user) {
+    showLogin();
+    return;
+  }
+
+  state.user = session.user;
+  await showApplication();
+}
+
+async function login(event) {
+  event.preventDefault();
+
+  elements.loginError.textContent = "";
+  elements.loginButton.disabled = true;
+
+  const email = elements.loginEmail.value.trim();
+  const password = elements.loginPassword.value;
+
+  const { data, error } =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+  elements.loginButton.disabled = false;
+
+  if (error) {
+    console.error(error);
+    elements.loginError.textContent =
+      "Nesprávný e-mail nebo heslo.";
+    return;
+  }
+
+  state.user = data.user;
+  elements.loginPassword.value = "";
+
+  await showApplication();
+}
+
+async function logout() {
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    showToast("Odhlášení se nepodařilo.");
+    return;
+  }
+
+  state.user = null;
+  state.clients = [];
+  state.activeClientId = null;
+  state.activeMealPlanId = null;
+
+  render();
+  showLogin();
+}
+
+function showLogin() {
+  elements.application.hidden = true;
+  elements.loginScreen.hidden = false;
+}
+
+async function showApplication() {
+  elements.loginScreen.hidden = true;
+  elements.application.hidden = false;
+
+  await loadDataFromDatabase();
+}
+
+async function loadDataFromDatabase() {
+  if (!state.user) {
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("clients")
+    .select(`
+      id,
+      name,
+      created_at,
+      meal_plans (
+        id,
+        name,
+        created_at,
+        meal_plan_items (
+          id,
+          food_id,
+          food_name,
+          amount,
+          protein_per_100,
+          fat_per_100,
+          carbs_per_100,
+          created_at
+        )
+      )
+    `)
+    .eq("user_id", state.user.id)
+    .order("created_at", {
+      ascending: true,
+    });
+
+  if (error) {
+    console.error(error);
+    showToast("Data se nepodařilo načíst.");
+    return;
+  }
+
+  state.clients = (data ?? []).map(client => ({
+    id: client.id,
+    name: client.name,
+
+    mealPlans: (client.meal_plans ?? [])
+      .sort(compareCreatedAt)
+      .map(plan => ({
+        id: plan.id,
+        name: plan.name,
+        customMessage: "",
+
+        foods: (plan.meal_plan_items ?? [])
+          .sort(compareCreatedAt)
+          .map(item => ({
+            id: item.id,
+            catalogFoodId: item.food_id,
+            name: item.food_name,
+            amount: Number(item.amount),
+
+            proteinPer100:
+              Number(item.protein_per_100),
+
+            fatPer100:
+              Number(item.fat_per_100),
+
+            carbsPer100:
+              Number(item.carbs_per_100),
+          })),
+      })),
+  }));
+
+  state.activeClientId =
+    state.clients[0]?.id ?? null;
+
+  state.activeMealPlanId =
+    state.clients[0]?.mealPlans[0]?.id ?? null;
+
+  render();
+}
+
+function compareCreatedAt(first, second) {
+  return (
+    new Date(first.created_at) -
+    new Date(second.created_at)
+  );
+}
+
+async function addClient(event) {
+  event.preventDefault();
+
+  const name = elements.newClientName.value.trim();
+
+  if (!name || !state.user) {
+    return;
+  }
+
+  const { data: client, error: clientError } =
+    await supabaseClient
+      .from("clients")
+      .insert({
+        user_id: state.user.id,
+        name,
+      })
+      .select("id, name")
+      .single();
+
+  if (clientError) {
+    console.error(clientError);
+    showToast("Klienta se nepodařilo přidat.");
+    return;
+  }
+
+  const { data: plan, error: planError } =
+    await supabaseClient
+      .from("meal_plans")
+      .insert({
+        user_id: state.user.id,
+        client_id: client.id,
+        name: "Jídelníček 1",
+      })
+      .select("id, name")
+      .single();
+
+  if (planError) {
+    console.error(planError);
+
+    await supabaseClient
+      .from("clients")
+      .delete()
+      .eq("id", client.id);
+
+    showToast("Jídelníček se nepodařilo vytvořit.");
+    return;
+  }
+
+  state.clients.push({
+    id: client.id,
+    name: client.name,
+    mealPlans: [
+      {
+        id: plan.id,
+        name: plan.name,
+        foods: [],
+        customMessage: "",
+      },
+    ],
+  });
+
+  state.activeClientId = client.id;
+  state.activeMealPlanId = plan.id;
+
+  elements.clientDialog.close();
+  render();
+}
