@@ -130,6 +130,9 @@ const elements = {
 
   foodOptions:
     document.querySelector("#foodOptions"),
+  
+  forgotPasswordButton:
+    document.querySelector("#forgotPasswordButton"),
 };
 
 registerEventListeners();
@@ -220,6 +223,11 @@ function registerEventListeners() {
       closeFoodDropdown();
     }
   });
+
+  elements.forgotPasswordButton.addEventListener(
+    "click",
+    sendPasswordReset
+  );
 }
 
 /* =========================
@@ -1534,4 +1542,45 @@ function selectCatalogFood(food) {
 
   closeFoodDropdown();
   updateFoodPreview();
+}
+
+async function sendPasswordReset() {
+  const email = elements.loginEmail.value.trim();
+
+  elements.loginError.textContent = "";
+
+  if (!email) {
+    elements.loginError.textContent =
+      "Nejprve vyplňte e-mail.";
+    return;
+  }
+
+  elements.forgotPasswordButton.disabled = true;
+
+  const resetUrl = new URL(
+    "reset-password.html",
+    window.location.href
+  ).href;
+
+  const { error } =
+    await supabaseClient.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: resetUrl,
+      }
+    );
+
+  elements.forgotPasswordButton.disabled = false;
+
+  if (error) {
+    console.error(error);
+
+    elements.loginError.textContent =
+      `Odeslání odkazu se nepodařilo: ${error.message}`;
+
+    return;
+  }
+
+  elements.loginError.textContent =
+    "Odkaz pro změnu hesla byl odeslán na e-mail.";
 }
