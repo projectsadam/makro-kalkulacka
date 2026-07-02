@@ -1558,7 +1558,7 @@ async function sendPasswordReset() {
   elements.forgotPasswordButton.disabled = true;
 
   const resetUrl = new URL(
-    "reset-password.html",
+    "./reset-password.html",
     window.location.href
   ).href;
 
@@ -1575,8 +1575,17 @@ async function sendPasswordReset() {
   if (error) {
     console.error(error);
 
-    elements.loginError.textContent =
-      `Odeslání odkazu se nepodařilo: ${error.message}`;
+    if (
+      error.message
+        .toLowerCase()
+        .includes("rate limit")
+    ) {
+      elements.loginError.textContent =
+        "Bylo odesláno příliš mnoho e-mailů. Zkuste to prosím znovu přibližně za hodinu.";
+    } else {
+      elements.loginError.textContent =
+        "Odeslání odkazu se nepodařilo.";
+    }
 
     return;
   }
