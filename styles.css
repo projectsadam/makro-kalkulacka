@@ -1572,3 +1572,141 @@ dialog::backdrop {
   font-weight: 900;
   flex: 0 0 auto;
 }
+
+/* =========================
+   MEAL HEADER
+   ========================= */
+
+.meal-config {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 22px;
+}
+
+.meal-title-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(260px, 420px);
+  gap: 14px;
+  align-items: end;
+}
+
+.compact-field {
+  margin: 0;
+}
+
+.compact-field label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.meal-title-row .subtitle-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.meal-title-row .subtitle-input:focus {
+  outline: 3px solid rgba(40, 95, 85, 0.14);
+  border-color: var(--primary);
+}
+
+.meal-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.meal-actions .button {
+  min-height: 52px;
+  padding: 12px 18px;
+  font-size: 1rem;
+}
+
+/* taby složených jídel */
+.tabs {
+  margin-bottom: 4px;
+}
+
+.tab {
+  font-size: 0.95rem;
+}
+
+/* hezčí karta sestavení zprávy */
+.message-builder-card {
+  padding: 24px;
+}
+
+.message-builder-item {
+  min-height: 64px;
+}
+
+.message-builder-item strong {
+  font-size: 1rem;
+}
+
+.message-builder-actions button {
+  min-width: 38px;
+  min-height: 38px;
+}
+
+/* výběr jídla do zprávy */
+.message-food-option strong {
+  font-size: 1rem;
+}
+
+.message-food-option small {
+  line-height: 1.35;
+}
+
+/* mobile */
+@media (max-width: 850px) {
+  .meal-config {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .meal-title-row {
+    grid-template-columns: 1fr;
+  }
+
+  .meal-actions {
+    justify-content: stretch;
+  }
+
+  .meal-actions .button {
+    flex: 1 1 160px;
+  }
+}
+
+@media (max-width: 520px) {
+  .meal-config {
+    gap: 16px;
+  }
+
+  .meal-title-row .subtitle-input {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .meal-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .meal-builder-actions,
+  .message-builder-actions {
+    width: 100%;
+  }
+}

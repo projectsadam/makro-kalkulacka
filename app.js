@@ -148,6 +148,8 @@ const elements = {
   closeMessageFoodPickerButton: document.querySelector(
     "#closeMessageFoodPickerButton",
   ),
+
+  mealPlanTypeInput: document.querySelector("#mealPlanTypeInput"),
 };
 
 registerEventListeners();
@@ -185,6 +187,8 @@ function registerEventListeners() {
   elements.foodSelectButton.addEventListener("click", toggleFoodDropdown);
 
   elements.foodSearchInput.addEventListener("input", renderFoodOptions);
+
+  elements.mealPlanTypeInput.addEventListener("change", updateMealPlanType);
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".food-combobox")) {
@@ -375,9 +379,10 @@ async function addClient(event) {
     .insert({
       user_id: state.user.id,
       client_id: client.id,
-      name: "Snídaně",
+      name: "Jídlo 1",
+      meal_type: "Snídaně",
     })
-    .select("id, name")
+    .select("id, name, meal_type")
     .single();
 
   if (planError) {
@@ -418,6 +423,7 @@ async function addClient(event) {
       {
         id: plan.id,
         name: plan.name,
+        mealType: plan.meal_type || "Snídaně",
         foods: [],
       },
     ],
@@ -525,11 +531,7 @@ function selectClient(clientId) {
    ========================= */
 
 function suggestNextMealPlanName(client) {
-  const usedNames = new Set(client.mealPlans.map((plan) => plan.name));
-
-  const suggestedName = MEAL_PLAN_TYPES.find((name) => !usedNames.has(name));
-
-  return suggestedName || "Večeře";
+  return `Jídlo ${client.mealPlans.length + 1}`;
 }
 
 async function addMealPlan() {
@@ -539,13 +541,22 @@ async function addMealPlan() {
     return;
   }
 
-  if (client.mealPlans.length >= MEAL_PLAN_TYPES.length) {
-    showToast("Už máte přidané všechny typy jídelníčku.");
+  const suggestedName = suggestNextMealPlanName(client);
 
+  const nameFromPrompt = prompt("Zadejte název jídla:", suggestedName);
+
+  if (nameFromPrompt === null) {
     return;
   }
 
-  const name = suggestNextMealPlanName(client);
+  const name = nameFromPrompt.trim();
+
+  if (!name) {
+    showToast("Název jídla nesmí být prázdný.");
+    return;
+  }
+
+  const mealType = elements.mealPlanTypeInput.value || "Oběd";
 
   const { data: plan, error } = await supabaseClient
     .from("meal_plans")
@@ -553,14 +564,15 @@ async function addMealPlan() {
       user_id: state.user.id,
       client_id: client.id,
       name,
+      meal_type: mealType,
     })
-    .select("id, name")
+    .select("id, name, meal_type")
     .single();
 
   if (error) {
-    console.error(error);
+    console.error("Chyba při přidání jídla:", error);
 
-    showToast("Jídelníček se nepodařilo přidat.");
+    showToast(error.message || "Jídlo se nepodařilo přidat.");
 
     return;
   }
@@ -568,52 +580,15 @@ async function addMealPlan() {
   client.mealPlans.push({
     id: plan.id,
     name: plan.name,
+    mealType: plan.meal_type || mealType,
     foods: [],
   });
 
   state.activeMealPlanId = plan.id;
 
   render();
-  showToast("Jídelníček byl přidán.");
-}
 
-async function updateMealPlanName(event) {
-  const plan = activeMealPlan();
-  const name = event.target.value.trim();
-
-  if (!plan) {
-    return;
-  }
-
-  if (!name) {
-    event.target.value = plan.name;
-    return;
-  }
-
-  const oldName = plan.name;
-
-  const { error } = await supabaseClient
-    .from("meal_plans")
-    .update({ name })
-    .eq("id", plan.id)
-    .eq("user_id", state.user.id);
-
-  if (error) {
-    console.error(error);
-
-    event.target.value = oldName;
-
-    showToast("Typ jídelníčku se nepodařilo uložit.");
-
-    return;
-  }
-
-  plan.name = name;
-
-  renderMealPlanTabs();
-  renderMessage(true);
-
-  showToast("Typ jídelníčku byl uložen.");
+  showToast("Jídlo bylo přidáno.");
 }
 
 async function deleteActiveMealPlan() {
@@ -916,6 +891,7 @@ async function loadDataFromDatabase() {
         meal_plans (
           id,
           name,
+          meal_type,
           created_at,
           meal_plan_items (
             id,
@@ -965,7 +941,7 @@ async function loadDataFromDatabase() {
     mealPlans: (client.meal_plans ?? []).sort(compareCreatedAt).map((plan) => ({
       id: plan.id,
       name: plan.name,
-
+      mealType: plan.meal_type || "Oběd",
       foods: (plan.meal_plan_items ?? [])
         .sort(compareCreatedAt)
         .map(mapMealPlanItem),
@@ -1127,9 +1103,7 @@ function renderMealPlanTabs() {
       plan.id === state.activeMealPlanId ? " active" : ""
     }`;
 
-    button.textContent = MEAL_PLAN_TYPES.includes(plan.name)
-      ? plan.name
-      : plan.name || "Jídelníček";
+    button.textContent = plan.name || "Bez názvu";
 
     elements.mealPlanTabs.append(button);
   });
@@ -1142,9 +1116,9 @@ function renderPlan() {
     return;
   }
 
-  elements.mealPlanNameInput.value = MEAL_PLAN_TYPES.includes(plan.name)
-    ? plan.name
-    : "Snídaně";
+  elements.mealPlanTypeInput.value = plan.mealType || "Oběd";
+
+  elements.mealPlanNameInput.value = plan.name || "";
 
   elements.foodTableBody.innerHTML = "";
 
@@ -1284,7 +1258,7 @@ function generateMessage() {
       );
     });
 
-    return [`${plan.name}:`, ...rows, ""];
+    return [`${plan.mealType || "Jídlo"}:`, ...rows, ""];
   });
 
   const totals = calculateMessageTotals(client);
@@ -1985,21 +1959,6 @@ function renderMessageBuilder() {
   });
 }
 
-function removeMessageItem(index) {
-  const client = activeClient();
-
-  if (!client) {
-    return;
-  }
-
-  client.messageItems.splice(index, 1);
-
-  saveMessageItems(client);
-
-  renderMessageBuilder();
-  renderMessage(true);
-}
-
 function moveMessageItem(index, direction) {
   const client = activeClient();
 
@@ -2021,8 +1980,23 @@ function moveMessageItem(index, direction) {
 
   saveMessageItems(client);
 
-  renderMessageBuilder();
-  renderMessage(true);
+  renderPlan();
+}
+
+function removeMessageItem(index) {
+  const client = activeClient();
+
+  if (!client) {
+    return;
+  }
+
+  client.messageItems.splice(index, 1);
+
+  saveMessageItems(client);
+
+  renderPlan();
+
+  showToast("Jídlo bylo odebráno ze zprávy.");
 }
 
 function getClientMealPlans(client) {
@@ -2087,8 +2061,8 @@ function addMessageItemByPlanId(planId) {
 
   saveMessageItems(client);
 
-  renderMessageBuilder();
-  renderMessage(true);
+  closeMessageFoodPicker();
+
   renderPlan();
 
   showToast("Jídlo bylo přidáno do zprávy.");
@@ -2106,4 +2080,83 @@ async function copyMessage() {
 
     showToast("Zpráva byla zkopírována.");
   }
+}
+
+async function updateMealPlanType(event) {
+  const plan = activeMealPlan();
+  const mealType = event.target.value;
+
+  if (!plan || !state.user) {
+    return;
+  }
+
+  const oldMealType = plan.mealType;
+
+  const { error } = await supabaseClient
+    .from("meal_plans")
+    .update({
+      meal_type: mealType,
+    })
+    .eq("id", plan.id)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+
+    event.target.value = oldMealType || "Oběd";
+
+    showToast("Typ jídla se nepodařilo uložit.");
+
+    return;
+  }
+
+  plan.mealType = mealType;
+
+  renderMealPlanTabs();
+  renderMessageBuilder();
+  renderMessage(true);
+
+  showToast("Typ jídla byl uložen.");
+}
+
+async function updateMealPlanName(event) {
+  const plan = activeMealPlan();
+  const name = event.target.value.trim();
+
+  if (!plan || !state.user) {
+    return;
+  }
+
+  if (!name) {
+    event.target.value = plan.name;
+    return;
+  }
+
+  const oldName = plan.name;
+
+  const { error } = await supabaseClient
+    .from("meal_plans")
+    .update({
+      name,
+    })
+    .eq("id", plan.id)
+    .eq("user_id", state.user.id);
+
+  if (error) {
+    console.error(error);
+
+    event.target.value = oldName;
+
+    showToast("Název jídla se nepodařilo uložit.");
+
+    return;
+  }
+
+  plan.name = name;
+
+  renderMealPlanTabs();
+  renderMessageBuilder();
+  renderMessage(true);
+
+  showToast("Název jídla byl uložen.");
 }
