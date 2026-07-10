@@ -288,6 +288,14 @@ section.card:not(.sidebar) {
   font-size: 1.2rem;
 }
 
+select.subtitle-input {
+  min-height: 44px;
+  padding: 4px 32px 4px 0;
+  cursor: pointer;
+  appearance: auto;
+  -webkit-appearance: menulist;
+}
+
 .title-input:focus,
 .subtitle-input:focus {
   border-bottom-color: var(--primary);
@@ -402,12 +410,7 @@ textarea:focus {
   -webkit-appearance: none;
   cursor: pointer;
   font-weight: 700;
-  background:
-    linear-gradient(
-      180deg,
-      #ffffff 0%,
-      #f9fbfb 100%
-    );
+  background: linear-gradient(180deg, #ffffff 0%, #f9fbfb 100%);
 }
 
 .field select:hover {
@@ -971,6 +974,43 @@ dialog::backdrop {
   .catalog-food-actions .button {
     width: 100%;
   }
+
+  .food-form {
+    overflow: visible;
+  }
+
+  .food-combobox {
+    position: relative;
+  }
+
+  .food-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    max-height: min(420px, 55vh);
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 18px 45px rgba(28, 43, 54, 0.2);
+    overflow: hidden;
+    z-index: 1000;
+  }
+
+  .food-options {
+    max-height: calc(min(420px, 55vh) - 70px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .food-search-input {
+    min-height: 48px;
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1093,6 +1133,10 @@ dialog::backdrop {
   }
 }
 
+/* =========================
+   FOOD COMBOBOX
+   ========================= */
+
 .food-combobox {
   position: relative;
   min-width: 0;
@@ -1204,49 +1248,327 @@ dialog::backdrop {
   font-weight: 500;
 }
 
-@media (max-width: 600px) {
-  .food-form {
-    overflow: visible;
+/* =========================
+   TARGETS
+   ========================= */
+
+.targets-card {
+  padding: 20px;
+}
+
+.targets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.day-type-switch {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.day-type-switch .button {
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.day-type-switch .button.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.targets-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.target-field {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.target-field label {
+  margin-bottom: 2px;
+}
+
+.target-input-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+}
+
+.target-input-wrap:focus-within {
+  outline: 3px solid rgba(40, 95, 85, 0.14);
+  border-color: var(--primary);
+}
+
+.target-input-wrap input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 0 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-weight: 800;
+  outline: none;
+}
+
+.target-input-wrap span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* =========================
+   TARGET PROGRESS
+   ========================= */
+
+.target-progress {
+  height: 9px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ecef;
+}
+
+.target-progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.target-progress-bar.neutral {
+  background: #b9c2ca;
+}
+
+.target-progress-bar.low {
+  background: #e6a23c;
+}
+
+.target-progress-bar.ok {
+  background: #3fa66b;
+}
+
+.target-progress-bar.high {
+  background: #c94c4c;
+}
+
+.summary-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.summary-card:has(.target-progress-bar.low) {
+  border-color: #e6a23c;
+  background: #fff8ec;
+}
+
+.summary-card:has(.target-progress-bar.ok) {
+  border-color: #7ecf9a;
+  background: #effaf2;
+}
+
+.summary-card:has(.target-progress-bar.high) {
+  border-color: #d77a7a;
+  background: #fff0f0;
+}
+
+@media (max-width: 900px) {
+  .targets-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .food-combobox {
-    position: relative;
-  }
-
-  .food-dropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    right: 0;
-    bottom: auto;
-
-    width: 100%;
-    max-height: min(420px, 55vh);
-    padding: 10px;
-
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    background: var(--surface);
-    box-shadow: 0 18px 45px rgba(28, 43, 54, 0.2);
-
-    overflow: hidden;
-    z-index: 1000;
-  }
-
-  .food-options {
-    max-height: calc(min(420px, 55vh) - 70px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .food-search-input {
-    min-height: 48px;
-    font-size: 16px;
+  .targets-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-  .food-options {
-    max-height: calc(70vh - 76px);
+@media (max-width: 480px) {
+  .targets-card {
+    padding: 16px;
   }
+
+  .targets-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .target-field {
+    padding: 10px;
+  }
+
+  .day-type-switch .button {
+    flex: 1 1 120px;
+  }
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.edit-row {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #eaf0ef;
+  color: var(--primary-dark);
+  font-weight: 800;
+}
+
+.edit-row:hover {
+  background: #dce8e5;
+}
+
+.delete-row {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #f8e8e8;
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.message-builder-list {
+  display: grid;
+  gap: 10px;
+}
+
+.message-builder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.message-builder-item > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.message-builder-item small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.message-builder-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.message-builder-actions button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #eaf0ef;
+  color: var(--primary-dark);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.remove-message-item {
+  background: #f8e8e8 !important;
+  color: var(--danger) !important;
+}
+
+.message-food-picker {
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+
+.message-food-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.message-food-picker-list {
+  display: grid;
+  gap: 14px;
+}
+
+.message-food-picker-group {
+  display: grid;
+  gap: 8px;
+}
+
+.message-food-picker-group h3 {
+  margin: 0;
+  color: var(--primary-dark);
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.message-food-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.message-food-option:hover {
+  border-color: var(--primary);
+  background: #f8fbfa;
+}
+
+.message-food-option span:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.message-food-option small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.message-food-plus {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-weight: 900;
+  flex: 0 0 auto;
 }

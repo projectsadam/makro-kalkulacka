@@ -1,5 +1,4 @@
-const SUPABASE_URL =
-  "https://jshxmdjnknepzzkbyqpx.supabase.co";
+const SUPABASE_URL = "https://jshxmdjnknepzzkbyqpx.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY =
   "sb_publishable_FjFVlSwMWn3_jnkFfGXmrg_Gh0WUNOt";
@@ -13,7 +12,7 @@ const supabaseClient = supabase.createClient(
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
-  }
+  },
 );
 
 const state = {
@@ -23,70 +22,46 @@ const state = {
 };
 
 const elements = {
-  application:
-    document.querySelector("#foodsApplication"),
+  application: document.querySelector("#foodsApplication"),
 
-  logoutButton:
-    document.querySelector("#logoutButton"),
+  logoutButton: document.querySelector("#logoutButton"),
 
-  form:
-    document.querySelector("#catalogFoodForm"),
+  form: document.querySelector("#catalogFoodForm"),
 
-  formTitle:
-    document.querySelector("#catalogFoodFormTitle"),
+  formTitle: document.querySelector("#catalogFoodFormTitle"),
 
-  name:
-    document.querySelector("#catalogFoodName"),
+  name: document.querySelector("#catalogFoodName"),
 
-  category:
-    document.querySelector("#catalogFoodCategory"),
+  category: document.querySelector("#catalogFoodCategory"),
 
-  protein:
-    document.querySelector("#catalogFoodProtein"),
+  protein: document.querySelector("#catalogFoodProtein"),
 
-  fat:
-    document.querySelector("#catalogFoodFat"),
+  fat: document.querySelector("#catalogFoodFat"),
 
-  carbs:
-    document.querySelector("#catalogFoodCarbs"),
+  carbs: document.querySelector("#catalogFoodCarbs"),
 
-  saveButton:
-    document.querySelector("#saveCatalogFoodButton"),
+  saveButton: document.querySelector("#saveCatalogFoodButton"),
 
-  cancelEditButton:
-    document.querySelector("#cancelFoodEditButton"),
+  cancelEditButton: document.querySelector("#cancelFoodEditButton"),
 
-  foodList:
-    document.querySelector("#catalogFoodList"),
+  foodList: document.querySelector("#catalogFoodList"),
 
-  foodCount:
-    document.querySelector("#catalogFoodCount"),
+  foodCount: document.querySelector("#catalogFoodCount"),
 
-  emptyFoods:
-    document.querySelector("#emptyCatalogFoods"),
+  emptyFoods: document.querySelector("#emptyCatalogFoods"),
 
-  toast:
-    document.querySelector("#toast"),
+  toast: document.querySelector("#toast"),
 };
 
 registerEventListeners();
 initializePage();
 
 function registerEventListeners() {
-  elements.form.addEventListener(
-    "submit",
-    saveFood
-  );
+  elements.form.addEventListener("submit", saveFood);
 
-  elements.cancelEditButton.addEventListener(
-    "click",
-    resetForm
-  );
+  elements.cancelEditButton.addEventListener("click", resetForm);
 
-  elements.logoutButton.addEventListener(
-    "click",
-    logout
-  );
+  elements.logoutButton.addEventListener("click", logout);
 }
 
 /* =========================
@@ -126,8 +101,7 @@ function redirectToLogin() {
    ========================= */
 
 async function logout() {
-  const { error } =
-    await supabaseClient.auth.signOut();
+  const { error } = await supabaseClient.auth.signOut();
 
   if (error) {
     console.error(error);
@@ -143,10 +117,10 @@ async function logout() {
    ========================= */
 
 async function loadFoods() {
-  const { data, error } =
-    await supabaseClient
-      .from("foods")
-      .select(`
+  const { data, error } = await supabaseClient
+    .from("foods")
+    .select(
+      `
         id,
         name,
         category,
@@ -154,27 +128,25 @@ async function loadFoods() {
         fat_per_100,
         carbs_per_100,
         created_at
-      `)
-      .eq("user_id", state.user.id)
-      .order("category", {
-        ascending: true,
-      })
-      .order("name", {
-        ascending: true,
-      });
+      `,
+    )
+    .eq("user_id", state.user.id)
+    .order("category", {
+      ascending: true,
+    })
+    .order("name", {
+      ascending: true,
+    });
 
   if (error) {
     console.error(error);
 
-    showToast(
-      "Potraviny se nepodařilo načíst."
-    );
+    showToast("Potraviny se nepodařilo načíst.");
 
     return;
   }
 
-  state.foods =
-    (data ?? []).map(mapFood);
+  state.foods = (data ?? []).map(mapFood);
 
   renderFoods();
 }
@@ -202,36 +174,33 @@ async function saveFood(event) {
 }
 
 async function createFood(foodData) {
-  const { data, error } =
-    await supabaseClient
-      .from("foods")
-      .insert({
-        user_id: state.user.id,
-        ...foodData,
-      })
-      .select(`
+  const { data, error } = await supabaseClient
+    .from("foods")
+    .insert({
+      user_id: state.user.id,
+      ...foodData,
+    })
+    .select(
+      `
         id,
         name,
         category,
         protein_per_100,
         fat_per_100,
         carbs_per_100
-      `)
-      .single();
+      `,
+    )
+    .single();
 
   if (error) {
     console.error(error);
 
-    showToast(
-      "Potravinu se nepodařilo přidat."
-    );
+    showToast("Potravinu se nepodařilo přidat.");
 
     return;
   }
 
-  state.foods.push(
-    mapFood(data)
-  );
+  state.foods.push(mapFood(data));
 
   resetForm();
   renderFoods();
@@ -240,48 +209,42 @@ async function createFood(foodData) {
 }
 
 async function updateFood(foodData) {
-  const foodId =
-    state.editingFoodId;
+  const foodId = state.editingFoodId;
 
   if (!foodId) {
     return;
   }
 
-  const { data, error } =
-    await supabaseClient
-      .from("foods")
-      .update(foodData)
-      .eq("id", foodId)
-      .eq("user_id", state.user.id)
-      .select(`
+  const { data, error } = await supabaseClient
+    .from("foods")
+    .update(foodData)
+    .eq("id", foodId)
+    .eq("user_id", state.user.id)
+    .select(
+      `
         id,
         name,
         category,
         protein_per_100,
         fat_per_100,
         carbs_per_100
-      `)
-      .single();
+      `,
+    )
+    .single();
 
   if (error) {
     console.error(error);
 
-    showToast(
-      "Potravinu se nepodařilo upravit."
-    );
+    showToast("Potravinu se nepodařilo upravit.");
 
     return;
   }
 
-  const updatedFood =
-    mapFood(data);
+  const updatedFood = mapFood(data);
 
-  state.foods =
-    state.foods.map(food =>
-      food.id === updatedFood.id
-        ? updatedFood
-        : food
-    );
+  state.foods = state.foods.map((food) =>
+    food.id === updatedFood.id ? updatedFood : food,
+  );
 
   resetForm();
   renderFoods();
@@ -290,43 +253,33 @@ async function updateFood(foodData) {
 }
 
 async function deleteFood(foodId) {
-  const food = state.foods.find(
-    item => item.id === foodId
-  );
+  const food = state.foods.find((item) => item.id === foodId);
 
   if (!food) {
     return;
   }
 
-  const confirmed = confirm(
-    `Opravdu chcete smazat potravinu „${food.name}“?`
-  );
+  const confirmed = confirm(`Opravdu chcete smazat potravinu „${food.name}“?`);
 
   if (!confirmed) {
     return;
   }
 
-  const { error } =
-    await supabaseClient
-      .from("foods")
-      .delete()
-      .eq("id", food.id)
-      .eq("user_id", state.user.id);
+  const { error } = await supabaseClient
+    .from("foods")
+    .delete()
+    .eq("id", food.id)
+    .eq("user_id", state.user.id);
 
   if (error) {
     console.error(error);
 
-    showToast(
-      "Potravinu se nepodařilo smazat."
-    );
+    showToast("Potravinu se nepodařilo smazat.");
 
     return;
   }
 
-  state.foods =
-    state.foods.filter(
-      item => item.id !== food.id
-    );
+  state.foods = state.foods.filter((item) => item.id !== food.id);
 
   if (state.editingFoodId === food.id) {
     resetForm();
@@ -342,35 +295,27 @@ async function deleteFood(foodId) {
    ========================= */
 
 function readForm() {
-  const name =
-    elements.name.value.trim();
+  const name = elements.name.value.trim();
 
-  const category =
-    elements.category.value.trim()
-    || "Ostatní";
+  const category = elements.category.value.trim() || "Ostatní";
 
-  const protein =
-    Number(elements.protein.value);
+  const protein = Number(elements.protein.value);
 
-  const fat =
-    Number(elements.fat.value);
+  const fat = Number(elements.fat.value);
 
-  const carbs =
-    Number(elements.carbs.value);
+  const carbs = Number(elements.carbs.value);
 
   const valuesAreValid =
-    name
-    && Number.isFinite(protein)
-    && Number.isFinite(fat)
-    && Number.isFinite(carbs)
-    && protein >= 0
-    && fat >= 0
-    && carbs >= 0;
+    name &&
+    Number.isFinite(protein) &&
+    Number.isFinite(fat) &&
+    Number.isFinite(carbs) &&
+    protein >= 0 &&
+    fat >= 0 &&
+    carbs >= 0;
 
   if (!valuesAreValid) {
-    showToast(
-      "Vyplňte správně všechny hodnoty."
-    );
+    showToast("Vyplňte správně všechny hodnoty.");
 
     return null;
   }
@@ -385,9 +330,7 @@ function readForm() {
 }
 
 function startEditingFood(foodId) {
-  const food = state.foods.find(
-    item => item.id === foodId
-  );
+  const food = state.foods.find((item) => item.id === foodId);
 
   if (!food) {
     return;
@@ -395,29 +338,21 @@ function startEditingFood(foodId) {
 
   state.editingFoodId = food.id;
 
-  elements.name.value =
-    food.name;
+  elements.name.value = food.name;
 
-  elements.category.value =
-    food.category;
+  elements.category.value = food.category;
 
-  elements.protein.value =
-    food.proteinPer100;
+  elements.protein.value = food.proteinPer100;
 
-  elements.fat.value =
-    food.fatPer100;
+  elements.fat.value = food.fatPer100;
 
-  elements.carbs.value =
-    food.carbsPer100;
+  elements.carbs.value = food.carbsPer100;
 
-  elements.formTitle.textContent =
-    "Upravit potravinu";
+  elements.formTitle.textContent = "Upravit potravinu";
 
-  elements.saveButton.textContent =
-    "Uložit změny";
+  elements.saveButton.textContent = "Uložit změny";
 
-  elements.cancelEditButton.hidden =
-    false;
+  elements.cancelEditButton.hidden = false;
 
   window.scrollTo({
     top: 0,
@@ -432,14 +367,11 @@ function resetForm() {
 
   elements.form.reset();
 
-  elements.formTitle.textContent =
-    "Přidat potravinu";
+  elements.formTitle.textContent = "Přidat potravinu";
 
-  elements.saveButton.textContent =
-    "Přidat potravinu";
+  elements.saveButton.textContent = "Přidat potravinu";
 
-  elements.cancelEditButton.hidden =
-    true;
+  elements.cancelEditButton.hidden = true;
 }
 
 /* =========================
@@ -449,45 +381,33 @@ function resetForm() {
 function renderFoods() {
   elements.foodList.innerHTML = "";
 
-  const sortedFoods =
-    [...state.foods].sort(
-      (first, second) => {
-        const categoryComparison =
-          first.category.localeCompare(
-            second.category,
-            "cs"
-          );
-
-        if (categoryComparison !== 0) {
-          return categoryComparison;
-        }
-
-        return first.name.localeCompare(
-          second.name,
-          "cs"
-        );
-      }
+  const sortedFoods = [...state.foods].sort((first, second) => {
+    const categoryComparison = first.category.localeCompare(
+      second.category,
+      "cs",
     );
 
-  elements.foodCount.textContent =
-    String(sortedFoods.length);
+    if (categoryComparison !== 0) {
+      return categoryComparison;
+    }
 
-  elements.emptyFoods.hidden =
-    sortedFoods.length > 0;
+    return first.name.localeCompare(second.name, "cs");
+  });
 
-  sortedFoods.forEach(food => {
-    const card =
-      document.createElement("article");
+  elements.foodCount.textContent = String(sortedFoods.length);
 
-    card.className =
-      "catalog-food-item";
+  elements.emptyFoods.hidden = sortedFoods.length > 0;
 
-    const calories =
-      calculateCalories(
-        food.proteinPer100,
-        food.fatPer100,
-        food.carbsPer100
-      );
+  sortedFoods.forEach((food) => {
+    const card = document.createElement("article");
+
+    card.className = "catalog-food-item";
+
+    const calories = calculateCalories(
+      food.proteinPer100,
+      food.fatPer100,
+      food.carbsPer100,
+    );
 
     card.innerHTML = `
       <div class="catalog-food-info">
@@ -534,17 +454,11 @@ function renderFoods() {
 
     card
       .querySelector(".edit-food")
-      .addEventListener(
-        "click",
-        () => startEditingFood(food.id)
-      );
+      .addEventListener("click", () => startEditingFood(food.id));
 
     card
       .querySelector(".delete-food")
-      .addEventListener(
-        "click",
-        () => deleteFood(food.id)
-      );
+      .addEventListener("click", () => deleteFood(food.id));
 
     elements.foodList.append(card);
   });
@@ -559,40 +473,25 @@ function mapFood(food) {
     id: food.id,
     name: food.name,
 
-    category:
-      food.category || "Ostatní",
+    category: food.category || "Ostatní",
 
-    proteinPer100:
-      Number(food.protein_per_100),
+    proteinPer100: Number(food.protein_per_100),
 
-    fatPer100:
-      Number(food.fat_per_100),
+    fatPer100: Number(food.fat_per_100),
 
-    carbsPer100:
-      Number(food.carbs_per_100),
+    carbsPer100: Number(food.carbs_per_100),
   };
 }
 
-function calculateCalories(
-  protein,
-  fat,
-  carbs
-) {
-  return (
-    protein * 4
-    + carbs * 4
-    + fat * 9
-  );
+function calculateCalories(protein, fat, carbs) {
+  return protein * 4 + carbs * 4 + fat * 9;
 }
 
 function formatNumber(value) {
-  return new Intl.NumberFormat(
-    "cs-CZ",
-    {
-      maximumFractionDigits: 1,
-      minimumFractionDigits: 0,
-    }
-  ).format(value);
+  return new Intl.NumberFormat("cs-CZ", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  }).format(value);
 }
 
 function escapeHtml(value) {
@@ -612,12 +511,7 @@ function showToast(message) {
   elements.toast.textContent = message;
   elements.toast.classList.add("visible");
 
-  toastTimer = setTimeout(
-    () => {
-      elements.toast.classList.remove(
-        "visible"
-      );
-    },
-    2200
-  );
+  toastTimer = setTimeout(() => {
+    elements.toast.classList.remove("visible");
+  }, 2200);
 }
